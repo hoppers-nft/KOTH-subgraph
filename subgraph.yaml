@@ -1,0 +1,29 @@
+specVersion: 0.0.1
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: KOTH
+    network: fuji
+    source:
+      address: "0xd3dcf5f060862e133b9e51e7e46c27ad22efe8fc"
+      abi: KOTH
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      entities:
+        - NewKing
+        - UpdatedOwner
+        - WinnerChanged
+      abis:
+        - name: KOTH
+          file: ./abis/KOTH.json
+      eventHandlers:
+        - event: NewKing(uint256,(address,uint256))
+          handler: handleNewKing
+        - event: UpdatedOwner(indexed address)
+          handler: handleUpdatedOwner
+        - event: WinnerChanged((address,uint256))
+          handler: handleWinnerChanged
+      file: ./src/koth.ts

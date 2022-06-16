@@ -1,0 +1,6 @@
+type ExampleEntity @entity {
+  id: ID!
+  count: BigInt!
+  cycle: BigInt! # uint256
+  winner_adr: Bytes! # address
+}
