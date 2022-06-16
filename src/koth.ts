@@ -1,66 +1,76 @@
-import { BigInt } from "@graphprotocol/graph-ts"
+import { BigInt, store } from "@graphprotocol/graph-ts"
 import {
   KOTH,
   NewKing,
   UpdatedOwner,
   WinnerChanged
 } from "../generated/KOTH/KOTH"
-import { ExampleEntity } from "../generated/schema"
+import { Competitor, CurrentCycle, CurrentAmount, Cycle } from "../generated/schema"
 
-export function handleNewKing(event: NewKing): void {
-  // Entities can be loaded from the store using a string ID; this ID
-  // needs to be unique across all entities of the same type
-  let entity = ExampleEntity.load(event.transaction.from.toHex())
-
-  // Entities only exist after they have been saved to the store;
-  // `null` checks allow to create entities on demand
-  if (!entity) {
-    entity = new ExampleEntity(event.transaction.from.toHex())
-
-    // Entity fields can be set using simple assignments
-    entity.count = BigInt.fromI32(0)
+function getOrCreateCurrentCycle(): CurrentCycle {
+  let current = CurrentCycle.load("CurrentCycle");
+  if(!current){
+    current = new CurrentCycle("CurrentCycle");
+    current.cycle = 1;
+    current.save();
   }
+  return current;
+}
+export function handleNewKing(event: NewKing): void {
+  IncrementCurrentCycle();
+  store.remove('CurrentAmount','CurrentAmount'); // restart the current amount
+}
 
-  // BigInt and BigDecimal math are supported
-  entity.count = entity.count + BigInt.fromI32(1)
 
-  // Entity fields can be set based on event parameters
-  entity.cycle = event.params.cycle
-  entity.winner_adr = event.params.winner.adr
 
-  // Entities can be written to the store with `.save()`
-  entity.save()
+export function handleWinnerChanged(event: WinnerChanged): void {
+  const currentCycle = getOrCreateCurrentCycle().cycle;
+  const userId = event.transaction.from.toHex() + '_' + currentCycle.toString();
+  let user = Competitor.load(userId);
+  if(!user){
+    user = new Competitor(userId);
+  }
+  user.fly = getCurrentAmount();
+  user.cycleNumber = currentCycle;
+  user.cycle = currentCycle.toString();
+  user.address = event.transaction.from;
+  user.save();
+  let cycle = Cycle.load(currentCycle.toString());
+  if(!cycle){
+    cycle = new Cycle(currentCycle.toString());
+    cycle.cycle = currentCycle;
+  }  
+    
+  cycle.currentWinner = event.params.winner.adr;
+  cycle.currentWinnerFly = user.fly;
+  cycle.save();
+}
 
-  // Note: If a handler doesn't require existing field values, it is faster
-  // _not_ to load the entity from the store. Instead, create it fresh with
-  // `new Entity(...)`, set the fields that should be updated and save the
-  // entity back to the store. Fields that were not set or unset remain
-  // unchanged, allowing for partial updates to be applied.
+function getCurrentAmount(): BigInt { // increments everytime its called
+  let amount = CurrentAmount.load('CurrentAmount');
+  if(!amount){
+    amount = new CurrentAmount('CurrentAmount');
+    amount.currentAmount = BigInt.fromString("100000000000000000000");
+  }
+  else {
+    const prevAmount = amount.currentAmount;
+    amount.currentAmount = amount.currentAmount.plus((prevAmount.times(BigInt.fromI32(3)).div(BigInt.fromI32(10))));
+  }
+  amount.save();
+  return amount.currentAmount;
+}
 
-  // It is also possible to access smart contracts from mappings. For
-  // example, the contract that has emitted the event can be connected to
-  // with:
-  //
-  // let contract = Contract.bind(event.address)
-  //
-  // The following functions can then be called on this contract to access
-  // state variables and other data:
-  //
-  // - contract.FLY(...)
-  // - contract.currentWinner(...)
-  // - contract.cycle(...)
-  // - contract.cycleToKing(...)
-  // - contract.enterAmount(...)
-  // - contract.getEnterAmount(...)
-  // - contract.isTimeUp(...)
-  // - contract.oldKings(...)
-  // - contract.owner(...)
-  // - contract.period(...)
-  // - contract.reward(...)
-  // - contract.startTs(...)
-  // - contract.step(...)
+function IncrementCurrentCycle(): void {
+  let current = CurrentCycle.load("CurrentCycle");
+  if(current){
+    current.cycle += 1;
+    current.save();
+  }
+  else {
+    current = new CurrentCycle("CurrentCycle");
+    current.cycle = 1;
+    current.save();
+  }
 }
 
 export function handleUpdatedOwner(event: UpdatedOwner): void {}
-
-export function handleWinnerChanged(event: WinnerChanged): void {}

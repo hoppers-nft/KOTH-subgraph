@@ -1,6 +1,26 @@
-type ExampleEntity @entity {
+type Cycle @entity {
   id: ID!
-  count: BigInt!
-  cycle: BigInt! # uint256
-  winner_adr: Bytes! # address
+  cycle: Int!
+  currentWinner: Bytes! # address
+  currentWinnerFly: BigInt!
+  competitors: [Competitor!] @derivedFrom (field: "cycle")
+}
+
+type CurrentCycle @entity {
+  id: ID! # CurrentCycle
+  cycle: Int!
+
+}
+
+type Competitor @entity {
+  id: ID! # addy + _ + Currentcycle
+  address : Bytes!
+  cycle: Cycle!
+  cycleNumber: Int!
+  fly : BigInt!
+}
+
+type CurrentAmount @entity {
+  id: ID!
+  currentAmount: BigInt!
 }
