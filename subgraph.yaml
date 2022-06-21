@@ -6,7 +6,7 @@ dataSources:
     name: KOTH
     network: fuji
     source:
-      address: "0x955b610708bebb8d06f1ec4edf6149db519ecff1."
+      address: "0x955b610708bebb8d06f1ec4edf6149db519ecff1"
       abi: KOTH
       startBlock: 10885078
     mapping:
