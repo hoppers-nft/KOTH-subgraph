@@ -24,3 +24,11 @@ type CurrentAmount @entity {
   id: ID!
   currentAmount: BigInt!
 }
+
+type King @entity {
+  id: ID!
+  address: Bytes!
+  message: String!
+  cycle: Int!
+  fly: BigInt!
+}

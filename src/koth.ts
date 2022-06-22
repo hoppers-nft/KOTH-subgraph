@@ -1,11 +1,12 @@
-import { BigInt, store } from "@graphprotocol/graph-ts"
+import { BigInt, log, store } from "@graphprotocol/graph-ts"
 import {
+  KingHasWrittenAMessage,
   KOTH,
   NewKing,
   UpdatedOwner,
   WinnerChanged
 } from "../generated/KOTH/KOTH"
-import { Competitor, CurrentCycle, CurrentAmount, Cycle } from "../generated/schema"
+import { Competitor, CurrentCycle, CurrentAmount, Cycle , King} from "../generated/schema"
 
 function getOrCreateCurrentCycle(): CurrentCycle {
   let current = CurrentCycle.load("CurrentCycle");
@@ -19,6 +20,12 @@ function getOrCreateCurrentCycle(): CurrentCycle {
 export function handleNewKing(event: NewKing): void {
   IncrementCurrentCycle();
   store.remove('CurrentAmount','CurrentAmount'); // restart the current amount
+  let king = new King(event.params.winner.adr.toHex());
+  king.address = event.params.winner.adr;
+  king.cycle = event.params.cycle.toI32();
+  king.message = event.params.winner.message;
+  king.fly = event.params.winner.flies;
+  king.save();
 }
 
 
@@ -73,4 +80,13 @@ function IncrementCurrentCycle(): void {
   }
 }
 
-export function handleUpdatedOwner(event: UpdatedOwner): void {}
+export function handleKingHasWrittenAMessage(event: KingHasWrittenAMessage): void {
+  let king = King.load(event.params.king.toHex());
+  if(king) {
+    king.message = event.params.message;
+    king.save();
+  }
+  else {
+    log.error("King not found!", [])
+  }
+}
