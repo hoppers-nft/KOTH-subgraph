@@ -25,7 +25,7 @@ export function handleNewKing(event: NewKing): void {
 
 export function handleWinnerChanged(event: WinnerChanged): void {
   const currentCycle = getOrCreateCurrentCycle().cycle;
-  const userId = event.transaction.from.toHex() + '_' + currentCycle.toString();
+  const userId = event.transaction.from.toHex() + '_' + currentCycle.toString() + event.transaction.hash.toHexString();
   let user = Competitor.load(userId);
   if(!user){
     user = new Competitor(userId);
