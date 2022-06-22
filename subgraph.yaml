@@ -6,9 +6,9 @@ dataSources:
     name: KOTH
     network: fuji
     source:
-      address: "0x5e0517f3ec9148ca8ea439bac8845ffb2b909298"
+      address: "0x8f9e4cf8276d5be506627f167f8d00a1945cdafa"
       abi: KOTH
-      startBlock: 10886724
+      startBlock: 10911439
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.5
