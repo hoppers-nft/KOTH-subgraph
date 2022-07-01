@@ -4,6 +4,7 @@ type Cycle @entity {
   currentWinner: Bytes! # address
   currentWinnerFly: BigInt!
   competitors: [Competitor!] @derivedFrom (field: "cycle")
+  message: String!
 }
 
 type CurrentCycle @entity {
@@ -18,6 +19,7 @@ type Competitor @entity {
   cycle: Cycle!
   cycleNumber: Int!
   fly : BigInt!
+  message: String!
 }
 
 type CurrentAmount @entity {

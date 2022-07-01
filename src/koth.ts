@@ -4,13 +4,14 @@ import {
   KOTH,
   NewKing,
   UpdatedOwner,
-  WinnerChanged
+  WinnerChanged,
+  WinnerHasWrittenAMessage
 } from "../generated/KOTH/KOTH"
-import { Competitor, CurrentCycle, CurrentAmount, Cycle , King} from "../generated/schema"
+import { Competitor, CurrentCycle, CurrentAmount, Cycle, King } from "../generated/schema"
 
 function getOrCreateCurrentCycle(): CurrentCycle {
   let current = CurrentCycle.load("CurrentCycle");
-  if(!current){
+  if (!current) {
     current = new CurrentCycle("CurrentCycle");
     current.cycle = 1;
     current.save();
@@ -19,7 +20,7 @@ function getOrCreateCurrentCycle(): CurrentCycle {
 }
 export function handleNewKing(event: NewKing): void {
   IncrementCurrentCycle();
-  store.remove('CurrentAmount','CurrentAmount'); // restart the current amount
+  store.remove('CurrentAmount', 'CurrentAmount'); // restart the current amount
   let king = new King(event.params.winner.adr.toHex());
   king.address = event.params.winner.adr;
   king.cycle = event.params.cycle.toI32();
@@ -34,20 +35,33 @@ export function handleWinnerChanged(event: WinnerChanged): void {
   const currentCycle = getOrCreateCurrentCycle().cycle;
   const userId = event.transaction.from.toHex() + '_' + currentCycle.toString() + event.transaction.hash.toHexString();
   let user = Competitor.load(userId);
-  if(!user){
+  if (!user) {
     user = new Competitor(userId);
   }
   user.fly = getCurrentAmount();
   user.cycleNumber = currentCycle;
   user.cycle = currentCycle.toString();
   user.address = event.transaction.from;
+  if (event.params.winner.messageSent) {
+    user.message = event.params.winner.message
+  }
+  else {
+    user.message = "";
+  }
   user.save();
   let cycle = Cycle.load(currentCycle.toString());
-  if(!cycle){
+  if (!cycle) {
     cycle = new Cycle(currentCycle.toString());
     cycle.cycle = currentCycle;
-  }  
-    
+   
+  }
+  if (event.params.winner.messageSent) {
+    cycle.message = event.params.winner.message
+  }
+  else {
+    cycle.message = "";
+  }
+
   cycle.currentWinner = event.params.winner.adr;
   cycle.currentWinnerFly = user.fly;
   cycle.save();
@@ -55,7 +69,7 @@ export function handleWinnerChanged(event: WinnerChanged): void {
 
 function getCurrentAmount(): BigInt { // increments everytime its called
   let amount = CurrentAmount.load('CurrentAmount');
-  if(!amount){
+  if (!amount) {
     amount = new CurrentAmount('CurrentAmount');
     amount.currentAmount = BigInt.fromString("100000000000000000000");
   }
@@ -69,7 +83,7 @@ function getCurrentAmount(): BigInt { // increments everytime its called
 
 function IncrementCurrentCycle(): void {
   let current = CurrentCycle.load("CurrentCycle");
-  if(current){
+  if (current) {
     current.cycle += 1;
     current.save();
   }
@@ -82,11 +96,36 @@ function IncrementCurrentCycle(): void {
 
 export function handleKingHasWrittenAMessage(event: KingHasWrittenAMessage): void {
   let king = King.load(event.params.king.toHex());
-  if(king) {
+  if (king) {
     king.message = event.params.message;
     king.save();
   }
   else {
     log.error("King not found!", [])
   }
+}
+
+export function handleWinnerHasWrittenAMessage(event: WinnerHasWrittenAMessage): void {
+  const currentCycle = getOrCreateCurrentCycle().cycle;
+  let cycle = Cycle.load(currentCycle.toString());
+  if (cycle) {
+    cycle.message = event.params.message;
+    cycle.save();
+  }
+  else {
+    log.error("Cycle not found!", [])
+  }
+
+  const userId = event.transaction.from.toHex() + '_' + currentCycle.toString() + event.transaction.hash.toHexString();
+  let user = Competitor.load(userId);
+  if (user) {
+
+    user.message = event.params.message
+    user.save();
+  }
+  else {
+    log.error("User (winner) not found!", [])
+  }
+  
+  
 }
