@@ -22,10 +22,6 @@ type Competitor @entity {
   message: String!
 }
 
-type CurrentAmount @entity {
-  id: ID!
-  currentAmount: BigInt!
-}
 
 type King @entity {
   id: ID!

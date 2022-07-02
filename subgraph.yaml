@@ -6,9 +6,9 @@ dataSources:
     name: KOTH
     network: fuji
     source:
-      address: "0x9720c576654229413a4828e78482e69227d3faab"
+      address: "0x2051699316de8e8971c32328755a7e3a08cabb69"
       abi: KOTH
-      startBlock: 11151279
+      startBlock: 11184481
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.5
@@ -22,14 +22,10 @@ dataSources:
         - name: KOTH
           file: ./abis/KOTH.json
       eventHandlers:
-        - event: NewKing(uint256,(address,uint256,string,bool))
+        - event:  NewKing((address,string,uint256,uint256))
           handler: handleNewKing
         - event: UpdatedOwner(indexed address)
           handler: handleUpdatedOwner
-        - event: WinnerChanged((address,uint256,string,bool))
+        - event: WinnerChanged((address,uint256,string))
           handler: handleWinnerChanged
-        - event: KingHasWrittenAMessage(address,string)
-          handler: handleKingHasWrittenAMessage
-        - event: WinnerHasWrittenAMessage(address,string)
-          handler: handleWinnerHasWrittenAMessage  
       file: ./src/koth.ts
